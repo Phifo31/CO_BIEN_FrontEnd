@@ -1,0 +1,48 @@
+/* CalendarCustom.css */
+
+/* Jour actuel en vert */
+.react-calendar__tile--now {
+  background: #28a745 !important;
+  color: white !important;
+}
+
+.react-calendar__tile--now:hover {
+  background: #28a745 !important;
+  color: white !important;
+}
+
+/* Jours normaux */
+.react-calendar__tile {
+  color: black;
+}
+
+/* Jour sélectionné */
+.react-calendar__tile--active {
+  background: #007bff !important;
+  color: white !important;
+}
+
+/* Navigation : mois et flèches */
+.react-calendar__navigation {
+  color: black;
+  font-weight: bold;
+}
+
+.react-calendar__navigation button {
+  color: black;
+  font-weight: bold;
+}
+
+/* Texte des jours de la semaine */
+.react-calendar__month-view__weekdays {
+  color: black;
+  font-weight: bold;
+}
+
+/* Calendrier centré et responsive */
+.react-calendar {
+  max-height: auto;          /* ne dépasse pas la hauteur de l'écran */
+  width: auto;                 /* largeur automatique pour garder le ratio */
+  margin: 0 auto;              /* centré horizontalement */
+  display: block;
+}

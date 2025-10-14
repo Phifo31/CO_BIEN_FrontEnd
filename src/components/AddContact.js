@@ -7,50 +7,65 @@ function AjouterContact({ onContactAdded }) {
   const [contactEmail, setContactEmail] = useState('');
 
   const handleAddContact = async () => {
-    if (contactName && contactEmail) {
-      try {
-        const response = await axios.post('http://localhost:3000/add-contact', {
-          name: contactName,
-          email: contactEmail,
-        });
-        console.log(response.data);
-        // Réinitialiser les champs
-        setContactName('');
-        setContactEmail('');
-        onContactAdded();
-        alert('Contact ajouté avec succès!');
-      } catch (error) {
-        console.error('Erreur lors de l\'ajout du contact:', error);
-        alert('Erreur lors de l\'ajout du contact.');
-      }
-    } else {
+    if (!contactName || !contactEmail) {
       alert('Veuillez remplir tous les champs.');
+      return;
     }
+
+    const newContact = { name: contactName, email: contactEmail };
+
+    try {
+      // ✅ Essaye d’envoyer au backend (sur port 5000 ou celui de ton serveur Node)
+      const response = await axios.post('http://localhost:5000/add-contact', newContact);
+      console.log('Réponse backend :', response.data);
+
+      alert('Contact ajouté avec succès sur le serveur !');
+    } catch (error) {
+      console.warn("Serveur injoignable, sauvegarde locale du contact :", error.message);
+
+      // ✅ Sauvegarde locale si le backend est indisponible
+      const storedContacts = JSON.parse(localStorage.getItem('contacts')) || [];
+      storedContacts.push(newContact);
+      localStorage.setItem('contacts', JSON.stringify(storedContacts));
+
+      alert('Contact ajouté localement (serveur injoignable).');
+    }
+
+    // ✅ Réinitialiser les champs
+    setContactName('');
+    setContactEmail('');
+
+    // ✅ Notifier le parent
+    if (onContactAdded) onContactAdded();
   };
 
   return (
     <div className='contact-form'>
       <h4>Ajouter un nouveau contact</h4>
+
       <label>
-        Nom:
+        Nom :
         <input
           type="text"
           value={contactName}
           onChange={(e) => setContactName(e.target.value)}
           className='input-field'
+          placeholder="Entrez le nom du contact"
         />
       </label>
+
       <label>
-        Email:
+        Email :
         <input
           type="email"
           value={contactEmail}
           onChange={(e) => setContactEmail(e.target.value)}
           className='input-field'
+          placeholder="Entrez l'adresse email"
         />
       </label>
+
       <div className='button-group'>
-        {/* <button onClick={() => onContactAdded(false)}>Annuler</button> */}
         <button onClick={handleAddContact}>Ajouter</button>
       </div>
     </div>
