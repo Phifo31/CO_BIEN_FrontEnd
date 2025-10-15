@@ -1,8 +1,9 @@
-// ManageContacts.js
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 function ManageContacts() {
+  const navigate = useNavigate();
   const [contactName, setContactName] = useState('');
   const [contactEmail, setContactEmail] = useState('');
   const [contacts, setContacts] = useState([]);
@@ -24,8 +25,7 @@ function ManageContacts() {
 
     try {
       // Optionnel : envoyer au backend
-      await axios.post('http://localhost:5000/add-contact', newContact);
-      console.log('Contact ajouté au serveur');
+      // await axios.post('http://localhost:5000/add-contact', newContact);
 
       // Sauvegarder dans localStorage
       const updatedContacts = [...contacts, newContact];
@@ -55,6 +55,7 @@ function ManageContacts() {
   return (
     <div
       style={{
+        position: 'relative',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -64,6 +65,30 @@ function ManageContacts() {
         fontFamily: 'Arial, sans-serif',
       }}
     >
+      {/* === Bouton retour === */}
+      <button
+        onClick={() => navigate('/')}
+        style={{
+          position: 'absolute',
+          top: '20px',
+          left: '20px',
+          padding: '10px 20px',
+          borderRadius: '8px',
+          backgroundColor: '#d0d0d0',
+          color: 'black',
+          border: '1px solid #888',
+          cursor: 'pointer',
+          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.15)',
+          transition: 'background-color 0.3s ease',
+          zIndex: 10,
+        }}
+        onMouseEnter={(e) => (e.target.style.backgroundColor = '#c0c0c0')}
+        onMouseLeave={(e) => (e.target.style.backgroundColor = '#d0d0d0')}
+      >
+        ⬅ Retour
+      </button>
+
+      {/* === Bloc ajout contact === */}
       <div
         style={{
           width: '100%',
@@ -128,6 +153,7 @@ function ManageContacts() {
         </button>
       </div>
 
+      {/* === Bloc liste contacts === */}
       <div
         style={{
           width: '100%',
@@ -173,8 +199,12 @@ function ManageContacts() {
                     cursor: 'pointer',
                     transition: 'background-color 0.3s',
                   }}
-                  onMouseEnter={(e) => (e.target.style.backgroundColor = '#a71d2a')}
-                  onMouseLeave={(e) => (e.target.style.backgroundColor = '#dc3545')}
+                  onMouseEnter={(e) =>
+                    (e.target.style.backgroundColor = '#a71d2a')
+                  }
+                  onMouseLeave={(e) =>
+                    (e.target.style.backgroundColor = '#dc3545')
+                  }
                 >
                   Supprimer
                 </button>

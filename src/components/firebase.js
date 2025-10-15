@@ -5,6 +5,7 @@ import { getDatabase } from "firebase/database";
 const firebaseConfig = {
   apiKey: "AIzaSyC92JtYAdCwFERy61um1y1fl0G_9ZirHJs",
   authDomain: "cobien-9620d.firebaseapp.com",
+  databaseURL: "https://cobien-9620d-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "cobien-9620d",
   storageBucket: "cobien-9620d.firebasestorage.app",
   messagingSenderId: "859701737427",

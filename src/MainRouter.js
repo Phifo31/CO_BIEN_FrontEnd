@@ -20,7 +20,7 @@ function MainRouter() {
         {/* Page principale existante */}
         <Route path="/app" element={<App />} />
         {/*Page d'appels vidéo*/}
-         <Route path="/calls" element={<VideoCallPage />} />
+         <Route path="/calls" element={<VideoCallPage currentUserEmail="capucine.gibel@2026.icam.fr" />} />
         {/*Page de gestion des contacts*/}
          <Route path="/manage-contacts" element={<ManageContacts />} />
         {/*Page de météo*/}

@@ -1,5 +1,5 @@
 // HomePage.js
-import React from 'react';
+import React, {useEffect} from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   FaCalendarAlt, 
@@ -9,8 +9,14 @@ import {
 } from 'react-icons/fa'; // 🔹 Ajout des icônes météo et photos
 import 'react-calendar/dist/Calendar.css';
 
+
 function HomePage() {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // ⚠️ change ici selon l'utilisateur (pour tester entre 2 navigateurs)
+    localStorage.setItem("userEmail", "capucine.gibel@gmail.com");
+  }, []);
 
   return (
     <div
