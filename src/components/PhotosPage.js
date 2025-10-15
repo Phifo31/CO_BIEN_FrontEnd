@@ -27,10 +27,8 @@ export default function PhotosPage() {
             className="d-block w-100 c-img"
             alt="Slide 1"
           />
-          <div className="carousel-caption top-0 mt-4">
-            <p className="mt-5 fs-3 text-uppercase">Discover the hidden world</p>
-            <h1 className="display-1 fw-bolder text-capitalize">The Aurora Tours</h1>
-            <button className="btn btn-primary px-4 py-2 fs-5 mt-5">Book a tour</button>
+          <div className="carousel-caption">
+            <h3 className="display-1 fw-bolder text-capitalize">Famille</h3>
           </div>
         </div>
 
@@ -40,16 +38,8 @@ export default function PhotosPage() {
             className="d-block w-100 c-img"
             alt="Slide 2"
           />
-          <div className="carousel-caption top-0 mt-4">
-            <p className="text-uppercase fs-3 mt-5">The season has arrived</p>
-            <p className="display-1 fw-bolder text-capitalize">3 available tours</p>
-            <button
-              className="btn btn-primary px-4 py-2 fs-5 mt-5"
-              data-bs-toggle="modal"
-              data-bs-target="#booking-modal"
-            >
-              Book a tour
-            </button>
+          <div className="carousel-caption">
+            <h3 className="display-1 fw-bolder text-capitalize">Espagne</h3>
           </div>
         </div>
 
@@ -59,16 +49,8 @@ export default function PhotosPage() {
             className="d-block w-100 c-img"
             alt="Slide 3"
           />
-          <div className="carousel-caption top-0 mt-4">
-            <p className="text-uppercase fs-3 mt-5">Destination activities</p>
-            <p className="display-1 fw-bolder text-capitalize">Go glacier hiking</p>
-            <button
-              className="btn btn-primary px-4 py-2 fs-5 mt-5"
-              data-bs-toggle="modal"
-              data-bs-target="#booking-modal"
-            >
-              Book a tour
-            </button>
+          <div className="carousel-caption">
+            <h3 className="display-1 fw-bolder text-capitalize">Mon potager</h3>
           </div>
         </div>
 
@@ -78,16 +60,8 @@ export default function PhotosPage() {
             className="d-block w-100 c-img"
             alt="Slide 4"
           />
-          <div className="carousel-caption top-0 mt-4">
-            <p className="text-uppercase fs-3 mt-5">Destination activities</p>
-            <p className="display-1 fw-bolder text-capitalize">Go glacier hiking</p>
-            <button
-              className="btn btn-primary px-4 py-2 fs-5 mt-5"
-              data-bs-toggle="modal"
-              data-bs-target="#booking-modal"
-            >
-              Book a tour
-            </button>
+          <div className="carousel-caption">
+            <h3 className="display-1 fw-bolder text-capitalize">France</h3>
           </div>
         </div>
 
@@ -97,16 +71,8 @@ export default function PhotosPage() {
             className="d-block w-100 c-img"
             alt="Slide 5"
           />
-          <div className="carousel-caption top-0 mt-4">
-            <p className="text-uppercase fs-3 mt-5">Destination activities</p>
-            <p className="display-1 fw-bolder text-capitalize">Go glacier hiking</p>
-            <button
-              className="btn btn-primary px-4 py-2 fs-5 mt-5"
-              data-bs-toggle="modal"
-              data-bs-target="#booking-modal"
-            >
-              Book a tour
-            </button>
+          <div className="carousel-caption">
+            <h3 className="display-1 fw-bolder text-capitalize">Culture</h3>
           </div>
         </div>
       </div>
