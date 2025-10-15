@@ -1,21 +1,28 @@
 /* Importing Google Fonts - Montserrat */
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: "Montserrat", sans-serif;
-}
-body {
+/* Était global: *, body, #root  ➜  devient local à la météo */
+.weatherRoot {
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
   background: linear-gradient(#F5EEFF, #DAC3F8);
+  font-family: "Montserrat", sans-serif;
 }
-#root {
+
+/* Reset local, au lieu de `* { ... }` */
+.weatherRoot * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Si tu utilisais #root { width:100% } :
+   applique-le sur un wrapper interne optionnel */
+.weatherRootInner {
   width: 100%;
 }
+
 .container {
   position: relative;
   margin: 0 auto;
@@ -26,7 +33,7 @@ body {
   background: linear-gradient(#352163, #33143C);
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
 }
-.container::after {
+/* .container::after {
   content: "";
   position: absolute;
   left: 0;
@@ -36,7 +43,23 @@ body {
   height: 100%;
   width: 100%;
   background: url("clouds.png");
+} */
+
+/* 1) Empêcher clouds.png de se répéter et couvrir correctement */
+.container::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0.95;
+  z-index: -1;
+  height: 100%;
+  width: 100%;
+  /* ⬇️ remplacement de la ligne background */
+  background: url("./clouds.png") no-repeat center / cover;
+  pointer-events: none; /* sécurité */
 }
+
 .search-section {
   display: flex;
   gap: 10px;
@@ -126,10 +149,19 @@ body {
   text-align: center;
   padding: 0 10px;
 }
-.hourly-forecast {
+/* .hourly-forecast {
   padding: 16px 25px;
   border-top: 1px solid rgba(255, 255, 255, 0.25);
+} */
+
+/* 2) Rendre la séparation bien visible entre "current" et "hourly" */
+.hourly-forecast {
+  padding: 16px 25px;
+  /* ⬇️ renforce la ligne de séparation */
+  border-top: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
+
 .hourly-forecast .weather-list {
   display: flex;
   gap: 40px;
@@ -168,20 +200,72 @@ body {
 .no-results .message {
   line-height: 23px;
 }
-/* Responsive media query code for small screen */
+/* ====== Responsive ====== */
+
+/* Petits écrans (mobile par défaut) : rien à faire, ton style actuel est ok */
+
+/* ≥ 624px : ce que tu avais, mais scope local */
 @media (max-width: 624px) {
-  body,
+  .weatherRoot {          /* au lieu de 'body' */
+    padding: 20px;
+  }
   .search-section {
     padding: 20px;
   }
   .hourly-forecast {
     padding: 16px 20px;
   }
-  .hourly-forecast .weather-list {
+  .weather-list {
     gap: 24px;
   }
   .no-results {
     padding: 30px;
     min-height: 458px;
   }
+}
+
+/* ≥ 768px (tablette) */
+@media (min-width: 768px) {
+  .container {
+    max-width: 720px;            /* plus large */
+    border-radius: 14px;
+  }
+  .search-section {
+    padding: 28px;
+    gap: 12px;
+  }
+  .current-weather {
+    padding: 28px 0 56px;
+  }
+  .current-weather .weather-icon {
+    width: 160px;
+  }
+  .current-weather .temperature {
+    font-size: 3.8rem;
+  }
+  .current-weather .temperature span {
+    font-size: 1.7rem;
+  }
+  .current-weather .description {
+    font-size: 1.3rem;
+  }
+  .hourly-forecast {
+    padding: 20px 28px;
+  }
+  .weather-list {
+    gap: 32px;
+  }
+  .weather-item .weather-icon {
+    width: 32px;
+  }
+}
+
+
+/* 3) (optionnel) gardez les espacements d’origine pour éviter l’aspect “cassé” 
+      quand l’écran s’élargit – on limite l’élargissement du conteneur */
+@media (min-width: 768px) {
+  .container { max-width: 720px; }
+}
+@media (min-width: 1024px) {
+  .container { max-width: 900px; } /* pas trop large, garde le look d'une “carte” */
 }
