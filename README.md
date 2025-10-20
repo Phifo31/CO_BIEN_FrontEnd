@@ -68,3 +68,60 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 ### `npm run build` fails to minify
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+
+```
+CO_BIEN_FrontEnd
+├─ .env
+├─ README.md
+├─ package-lock.json
+├─ package.json
+├─ public
+│  ├─ favicon.ico
+│  ├─ icons_weather
+│  │  ├─ clear.svg
+│  │  ├─ clouds.svg
+│  │  ├─ mist.svg
+│  │  ├─ moderate_heavy_rain.svg
+│  │  ├─ no-result.svg
+│  │  ├─ rain.svg
+│  │  ├─ snow.svg
+│  │  ├─ thunder.svg
+│  │  └─ thunder_rain.svg
+│  ├─ index.html
+│  ├─ logo192.png
+│  ├─ logo512.png
+│  ├─ manifest.json
+│  └─ robots.txt
+└─ src
+   ├─ App.css
+   ├─ App.js
+   ├─ App.test.js
+   ├─ MainRouter.js
+   ├─ components
+   │  ├─ AddContact.js
+   │  ├─ CalendarCustom.css
+   │  ├─ CalendarPage.js
+   │  ├─ HomePage.js
+   │  ├─ LEDStripControl.js
+   │  ├─ ManageContacts.js
+   │  ├─ PhotosPage.js
+   │  ├─ RFIDControl.js
+   │  ├─ SensorControl.js
+   │  ├─ VideoCallPage.js
+   │  ├─ WeatherPage.js
+   │  ├─ clouds.png
+   │  ├─ components_weather
+   │  │  ├─ CurrentWeather.jsx
+   │  │  ├─ HourlyWeather.jsx
+   │  │  ├─ NoResultsDiv.jsx
+   │  │  └─ SearchSection.jsx
+   │  ├─ constants_weather.js
+   │  ├─ firebase.js
+   │  └─ weather.module.css
+   ├─ index.css
+   ├─ index.js
+   ├─ logo.svg
+   ├─ reportWebVitals.js
+   └─ setupTests.js
+
+```

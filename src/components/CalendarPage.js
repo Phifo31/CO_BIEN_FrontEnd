@@ -12,8 +12,8 @@ function CalendarPage() {
   // Exemple d'événements (exemple statique)
   const events = {
     '2025-10-09': [
-      { time: '09:00', title: 'Réunion équipe projet' },
-      { time: '14:30', title: 'Appel client KoNnectik' },
+      { time: '12:00', title: 'Repas de famille' },
+      { time: '16:30', title: 'Appel médecin' },
     ],
     '2025-10-10': [{ time: '10:00', title: 'Présentation du prototype' }],
   };

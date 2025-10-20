@@ -1,98 +1,96 @@
 // RFIDControl.js
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { subscribe, unsubscribe, publish } from '../mqttClient'; // ← Import centralisé
 
-function RFIDControl({ client }) {
+function RFIDControl() {
   const [cardID, setCardID] = useState('');
   const [configuring, setConfiguring] = useState(false);
   const [action, setAction] = useState('');
   const navigate = useNavigate();
 
-  // 🔹 Écoute les messages MQTT pour détecter les cartes RFID
+  // === Écoute les messages MQTT du topic RFID ===
   useEffect(() => {
-    if (client) {
-      client.on('message', (topic, message) => {
-        if (topic === 'rfid/card') {
-          const detectedCardID = message.toString();
-          setCardID(detectedCardID);
+    const handleRFIDMessage = (msg, topic) => {
+      if (topic === 'rfid/card') {
+        const detectedCardID = msg.toString();
+        setCardID(detectedCardID);
 
-          if (!configuring) {
-            // Vérifie si la carte est déjà liée à une action
-            const storedLinks = JSON.parse(localStorage.getItem('rfidLinks')) || {};
-            const linkedAction = storedLinks[detectedCardID];
+        // Si on n’est pas en mode configuration
+        if (!configuring) {
+          const storedLinks = JSON.parse(localStorage.getItem('rfidLinks')) || {};
+          const linkedAction = storedLinks[detectedCardID];
 
-            if (linkedAction) {
-              switch (linkedAction) {
-                case 'Agenda':
-                  navigate('/calendar');
-                  break;
+          if (linkedAction) {
+            switch (linkedAction) {
+              case 'Agenda':
+                navigate('/calendar');
+                break;
 
-                case 'Visio': {
-                  // 🔹 Trouver le contact Joseph
-                  const contacts = JSON.parse(localStorage.getItem('contacts')) || [];
-                  const joseph = contacts.find(c =>
-                    c.name.toLowerCase().includes('joseph')
+              case 'Visio': {
+                const contacts = JSON.parse(localStorage.getItem('contacts')) || [];
+                const joseph = contacts.find((c) =>
+                  c.name.toLowerCase().includes('joseph')
+                );
+
+                if (joseph) {
+                  // Sauvegarde de l’intention d’appel
+                  localStorage.setItem(
+                    'pendingCall',
+                    JSON.stringify({
+                      target: joseph.email,
+                      timestamp: Date.now(),
+                    })
                   );
 
-                  if (joseph) {
-                    // 🔹 Sauvegarder une "intention d'appel"
-                    localStorage.setItem('pendingCall', JSON.stringify({
-                      target: joseph.email,
-                      timestamp: Date.now()
-                    }));
-
-                    // 🔹 Aller sur la page d'appels
-                    navigate('/calls');
-                  } else {
-                    alert('Aucun contact nommé Joseph trouvé dans vos contacts.');
-                  }
-                  break;
+                  navigate('/calls');
+                } else {
+                  alert('Aucun contact nommé Joseph trouvé.');
                 }
-
-                case 'Question':
-                  navigate('/question');
-                  break;
-
-                default:
-                  console.log(`Aucune action associée pour ${detectedCardID}`);
+                break;
               }
-            } else {
-              alert(`Carte détectée (${detectedCardID}) mais aucune action n’est liée.`);
+
+              case 'Question':
+                navigate('/question');
+                break;
+
+              default:
+                console.log(`Aucune action associée à la carte ${detectedCardID}`);
             }
+          } else {
+            alert(`Carte détectée (${detectedCardID}) mais aucune action n’est liée.`);
           }
         }
-      });
-
-      client.subscribe('rfid/card');
-    }
-
-    return () => {
-      if (client) {
-        client.unsubscribe('rfid/card');
       }
     };
-  }, [client, configuring, navigate]);
 
-  // 🔹 Démarre le mode configuration
+    // 🔹 S'abonner au topic
+    subscribe('rfid/card', handleRFIDMessage);
+
+    // 🔹 Nettoyage à la fermeture du composant
+    return () => {
+      unsubscribe('rfid/card', handleRFIDMessage);
+    };
+  }, [configuring, navigate]);
+
+  // === Mode configuration ===
   const handleConfigurationClick = () => {
-    if (client) {
-      client.publish('rfid/init', 'Card_Configuration');
-    }
+    publish('rfid/init', 'Card_Configuration');
     setConfiguring(true);
   };
 
-  // 🔹 Confirmation de l’association carte → action
+  // === Confirmation de l’association carte → action ===
   const confirmConfiguration = () => {
-    if (client && cardID && action) {
-      // Publier vers le périphérique
-      client.publish('rfid/config', JSON.stringify({ id: cardID, action }));
+    if (cardID && action) {
+      // 🔹 Publier la config sur le broker
+      publish('rfid/config', { id: cardID, action });
 
-      // Sauvegarder localement
+      // 🔹 Sauvegarder localement
       const storedLinks = JSON.parse(localStorage.getItem('rfidLinks')) || {};
       storedLinks[cardID] = action;
       localStorage.setItem('rfidLinks', JSON.stringify(storedLinks));
 
-      alert(`RFID Card ID ${cardID} liée à l’action : ${action}`);
+      alert(`✅ RFID Card ID ${cardID} liée à l’action : ${action}`);
     } else {
       alert('Veuillez détecter une carte RFID et choisir une action.');
     }
@@ -109,10 +107,12 @@ function RFIDControl({ client }) {
       {configuring && (
         <div className="rfid-config">
           <label>Card ID: {cardID || 'En attente de carte...'}</label>
+
           <div>
             <label className="action-prompt">
               À quelle action voulez-vous attribuer cette carte ?
             </label>
+
             <div className="action-button-prompt">
               <button className="action-button" onClick={() => setAction('Visio')}>
                 Visio
@@ -125,6 +125,7 @@ function RFIDControl({ client }) {
               </button>
             </div>
           </div>
+
           <button onClick={confirmConfiguration}>Confirmer</button>
         </div>
       )}

@@ -8,10 +8,13 @@ import VideoCallPage from './components/VideoCallPage';
 import ManageContacts from './components/ManageContacts';
 import WeatherPage from './components/WeatherPage';
 import PhotosPage from './components/PhotosPage';
+import ButtonListener from './components/ButtonListener';
 
 function MainRouter() {
   return (
     <Router>
+       {/*Ecoute du bouton capacitif*/}
+         <ButtonListener />  {/* toujours actif */}
       <Routes>
         {/* Page d'accueil vide */}
         <Route path="/" element={<HomePage />} />

@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import mqtt from 'mqtt';
+import { subscribe, unsubscribe, publish } from '../mqttClient'; // ← utilisation du client centralisé
 
 function SensorControl() {
-  // Initial sensor configuration
   const initialSensors = [
     { id: 1, PIC: 1, type: 'Touch', threshold: 100, scaling: 1, deviation: 0 },
     { id: 2, PIC: 1, type: 'Proximity', threshold: 100, scaling: 1, deviation: 0 },
@@ -11,30 +10,28 @@ function SensorControl() {
   ];
 
   const [sensors, setSensors] = useState(initialSensors);
-  const [mqttClient, setMqttClient] = useState(null);
 
-  // Connect to MQTT broker
+  // === Abonnement au topic des capteurs ===
   useEffect(() => {
-    const client = mqtt.connect('ws://192.168.172.196:9001');
-    client.on('connect', () => {
-      console.log('Connected to MQTT broker');
-      client.subscribe('sensor/current-configuration');
-    });
-
-    client.on('message', (topic, message) => {
-      if (topic === 'sensor/current-configuration') {
-        const sensorData = JSON.parse(message.toString());
-        updateSensorData(sensorData);
+    const handleSensorMessage = (msg) => {
+      try {
+        const data = JSON.parse(msg);
+        updateSensorData(data);
+      } catch (err) {
+        console.error('❌ Invalid sensor data:', msg);
       }
-    });
+    };
 
-    setMqttClient(client);
+    // 🔹 S'abonner au topic
+    subscribe('sensor/current-configuration', handleSensorMessage);
 
+    // 🔹 Se désabonner à la destruction du composant
     return () => {
-      if (client) client.end();
+      unsubscribe('sensor/current-configuration', handleSensorMessage);
     };
   }, []);
 
+  // === Met à jour les données reçues ===
   const updateSensorData = (data) => {
     setSensors((prevSensors) =>
       prevSensors.map((sensor) => {
@@ -43,15 +40,12 @@ function SensorControl() {
         if (sensor.id === 1 && data.PIC1?.touchDeviation !== undefined) {
           updatedSensor.deviation = data.PIC1.touchDeviation;
         }
-
         if (sensor.id === 2 && data.PIC1?.proximityDeviation !== undefined) {
           updatedSensor.deviation = data.PIC1.proximityDeviation;
         }
-
         if (sensor.id === 3 && data.PIC2?.touchDeviation !== undefined) {
           updatedSensor.deviation = data.PIC2.touchDeviation;
         }
-
         if (sensor.id === 4 && data.PIC2?.proximityDeviation !== undefined) {
           updatedSensor.deviation = data.PIC2.proximityDeviation;
         }
@@ -61,6 +55,7 @@ function SensorControl() {
     );
   };
 
+  // === Gestion des champs ===
   const handleInputChange = (PIC, type, field, value) => {
     setSensors((prevSensors) =>
       prevSensors.map((sensor) =>
@@ -71,25 +66,24 @@ function SensorControl() {
     );
   };
 
+  // === Publication de la nouvelle config ===
   const updateConfiguration = (PIC) => {
     const touchSensor = sensors.find((sensor) => sensor.PIC === PIC && sensor.type === 'Touch');
     const proximitySensor = sensors.find((sensor) => sensor.PIC === PIC && sensor.type === 'Proximity');
 
-    if (mqttClient) {
-      mqttClient.publish(
-        'sensor/update',
-        JSON.stringify({
-          PIC,
-          touchThreshold: touchSensor.threshold,
-          proximityThreshold: proximitySensor.threshold,
-          touchScaling: touchSensor.scaling,
-          proximityScaling: proximitySensor.scaling,
-        })
-      );
-      alert(`Configuration updated for PIC ${PIC}`);
-    }
+    const payload = {
+      PIC,
+      touchThreshold: touchSensor.threshold,
+      proximityThreshold: proximitySensor.threshold,
+      touchScaling: touchSensor.scaling,
+      proximityScaling: proximitySensor.scaling,
+    };
+
+    publish('sensors/update', payload);
+    alert(`✅ Configuration updated for PIC ${PIC}`);
   };
 
+  // === Rendu de l'interface ===
   return (
     <div className="sensor-control">
       <div className="sensor-grid">
@@ -101,7 +95,7 @@ function SensorControl() {
             <div key={PIC} className="sensor-config">
               <h3>Configuration for PIC {PIC}</h3>
 
-              {/* Touch Deviation Bar */}
+              {/* Touch Deviation */}
               <div className="horizontal-bar">
                 <label>Touch Deviation:</label>
                 <div className="bar-container">
@@ -109,22 +103,19 @@ function SensorControl() {
                     className="deviation-bar"
                     style={{
                       width: `${touchSensor.deviation / 1.27}%`,
-                      backgroundColor: touchSensor.deviation >= touchSensor.threshold ? 'red' : 'green',
+                      backgroundColor:
+                        touchSensor.deviation >= touchSensor.threshold ? 'red' : 'green',
                     }}
                   ></div>
                   <div
                     className="threshold-line"
-                    style={{
-                      left: `${touchSensor.threshold / 1.27}%`,
-                    }}
+                    style={{ left: `${touchSensor.threshold / 1.27}%` }}
                   ></div>
                 </div>
-                <p className="deviation-value">
-                  Current Deviation: {touchSensor.deviation}
-                </p>
+                <p>Current Deviation: {touchSensor.deviation}</p>
               </div>
 
-              {/* Proximity Deviation Bar */}
+              {/* Proximity Deviation */}
               <div className="horizontal-bar">
                 <label>Proximity Deviation:</label>
                 <div className="bar-container">
@@ -132,23 +123,21 @@ function SensorControl() {
                     className="deviation-bar"
                     style={{
                       width: `${proximitySensor.deviation / 1.27}%`,
-                      backgroundColor: proximitySensor.deviation > proximitySensor.threshold ? 'red' : 'green',
+                      backgroundColor:
+                        proximitySensor.deviation >= proximitySensor.threshold ? 'red' : 'green',
                     }}
                   ></div>
                   <div
                     className="threshold-line"
-                    style={{
-                      left: `${proximitySensor.threshold / 1.27}%`,
-                    }}
+                    style={{ left: `${proximitySensor.threshold / 1.27}%` }}
                   ></div>
                 </div>
-                <p className="deviation-value">
-                  Current Deviation: {proximitySensor.deviation}
-                </p>
+                <p>Current Deviation: {proximitySensor.deviation}</p>
               </div>
 
+              {/* Config Touch */}
               <div>
-                <label>Touch Threshold (0-127):</label>
+                <label>Touch Threshold (0–127):</label>
                 <input
                   type="number"
                   min="0"
@@ -161,7 +150,7 @@ function SensorControl() {
               </div>
 
               <div>
-                <label>Proximity Threshold (0-127):</label>
+                <label>Proximity Threshold (0–127):</label>
                 <input
                   type="number"
                   min="0"
@@ -174,7 +163,7 @@ function SensorControl() {
               </div>
 
               <div>
-                <label>Touch Scaling (0-4):</label>
+                <label>Touch Scaling (0–4):</label>
                 <select
                   value={touchSensor.scaling}
                   onChange={(e) =>
@@ -182,15 +171,13 @@ function SensorControl() {
                   }
                 >
                   {[0, 1, 2, 3, 4].map((val) => (
-                    <option key={val} value={val}>
-                      {val}
-                    </option>
+                    <option key={val} value={val}>{val}</option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label>Proximity Scaling (0-4):</label>
+                <label>Proximity Scaling (0–4):</label>
                 <select
                   value={proximitySensor.scaling}
                   onChange={(e) =>
@@ -198,14 +185,14 @@ function SensorControl() {
                   }
                 >
                   {[0, 1, 2, 3, 4].map((val) => (
-                    <option key={val} value={val}>
-                      {val}
-                    </option>
+                    <option key={val} value={val}>{val}</option>
                   ))}
                 </select>
               </div>
 
-              <button onClick={() => updateConfiguration(PIC)}>Update Configuration</button>
+              <button onClick={() => updateConfiguration(PIC)}>
+                Update Configuration
+              </button>
             </div>
           );
         })}
