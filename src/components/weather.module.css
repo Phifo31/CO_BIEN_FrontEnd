@@ -227,8 +227,8 @@
 /* ≥ 768px (tablette) */
 @media (min-width: 768px) {
   .container {
-    max-width: 720px;            /* plus large */
-    border-radius: 14px;
+    max-width: 900px;            /* plus large */
+    border-radius: 18px;
   }
   .search-section {
     padding: 28px;
@@ -264,8 +264,8 @@
 /* 3) (optionnel) gardez les espacements d’origine pour éviter l’aspect “cassé” 
       quand l’écran s’élargit – on limite l’élargissement du conteneur */
 @media (min-width: 768px) {
-  .container { max-width: 720px; }
+  .container { max-width: 900px; }
 }
 @media (min-width: 1024px) {
-  .container { max-width: 900px; } /* pas trop large, garde le look d'une “carte” */
+  .container { max-width: 1200px; } /* pas trop large, garde le look d'une “carte” */
 }

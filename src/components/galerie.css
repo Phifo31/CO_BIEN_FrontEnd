@@ -1,0 +1,64 @@
+/* ====== Plein écran ====== */
+#hero-carousel,
+#hero-carousel .carousel-inner,
+#hero-carousel .carousel-item {
+  height: 100vh;
+}
+
+.c-item {
+  height: 100vh; /* compat */
+}
+
+.c-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.6);
+}
+
+/* ====== Légende centrée juste au-dessus des contrôles ====== */
+.carousel-caption {
+  position: absolute;
+  bottom: 4.5rem;               /* ajuste ↑↓ selon ton goût (ex: 4rem / 5rem) */
+  left: 50%;
+  transform: translateX(-50%);
+  width: auto;
+  text-align: center;
+  padding: 0;
+  background: none;
+  backdrop-filter: none;
+  font-family: inherit;         /* garde ta police */
+}
+
+/* Légende plus petite (type “label”) */
+.carousel-caption h3 {
+  margin: 0;
+  font-weight: 600;
+  line-height: 1.25;
+  font-size: clamp(12px, 1.6vw, 18px);
+}
+
+/* Indicateurs/contrôles (optionnel) */
+.carousel-indicators [data-bs-target] {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+  filter: drop-shadow(0 0 4px rgba(0,0,0,.6));
+}
+
+/* ====== Responsive tweaks ====== */
+@media (max-width: 576px) {
+  .carousel-caption {
+    bottom: 4rem;               /* un peu plus proche sur mobile */
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    padding: 0 .5rem;
+  }
+  .carousel-caption h3 {
+    font-size: 12px;
+  }
+}
