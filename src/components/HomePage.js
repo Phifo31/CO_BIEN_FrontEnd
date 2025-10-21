@@ -59,7 +59,7 @@ function HomePage() {
           position: 'absolute',
           top: '20px',
           right: '20px',
-          padding: '10px 20px',
+          padding: '10px 10px',
           borderRadius: '8px',
           backgroundColor: '#007bff',
           color: 'white',

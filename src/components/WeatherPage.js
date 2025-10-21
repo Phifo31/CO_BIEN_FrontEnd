@@ -3,6 +3,7 @@ import CurrentWeather from "./components_weather/CurrentWeather";
 import HourlyWeatherItem from "./components_weather/HourlyWeather";
 import { weatherCodes } from "./constants_weather";
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import NoResultsDiv from "./components_weather/NoResultsDiv";
 import styles from "./weather.module.css";
 
@@ -11,6 +12,7 @@ const WeatherPage = () => {
   const [hourlyForecasts, setHourlyForecasts] = useState([]);
   const [hasNoResults, setHasNoResults] = useState(false);
   const searchInputRef = useRef(null);
+  const navigate = useNavigate();
   const API_KEY = process.env.REACT_APP_API_KEY;
 
   const filterHourlyForecast = (hourlyData) => {
@@ -54,39 +56,74 @@ const WeatherPage = () => {
   };
 
   useEffect(() => {
-    const defaultCity = "London";
+    const defaultCity = "Toulouse";
     const API_URL = `https://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${defaultCity}&days=2`;
     getWeatherDetails(API_URL);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
-    <div className={styles.weatherRoot}>
-      <div className={styles.container}>
-        {/* Search section */}
-        <SearchSection
-          getWeatherDetails={getWeatherDetails}
-          searchInputRef={searchInputRef}
-        />
+    <div
+      style={{
+        position: "relative",
+        height: "100vh",
+        width: "100vw",
+        display: "flex",
+        backgroundColor: "#e0e0e0", // gris clair
+        color: "black",
+      }}
+    >
+      {/* === Bouton retour === */}
+      <button
+        onClick={() => navigate("/")}
+        style={{
+          position: "absolute",
+          top: "20px",
+          left: "20px",
+          padding: "10px 20px",
+          borderRadius: "8px",
+          backgroundColor: "#d0d0d0",
+          color: "black",
+          border: "1px solid #888",
+          cursor: "pointer",
+          boxShadow: "0 2px 4px rgba(0, 0, 0, 0.15)",
+          transition: "background-color 0.3s ease",
+          zIndex: 10,
+        }}
+        onMouseEnter={(e) => (e.target.style.backgroundColor = "#c0c0c0")}
+        onMouseLeave={(e) => (e.target.style.backgroundColor = "#d0d0d0")}
+      >
+        ⬅ Retour
+      </button>
 
-        {/* Content */}
-        {hasNoResults ? (
-          <NoResultsDiv />
-        ) : (
-          <div className={styles["weather-section"]}>
-            <CurrentWeather currentWeather={currentWeather} />
-            <div className={styles["hourly-forecast"]}>
-              <ul className={styles["weather-list"]}>
-                {hourlyForecasts.map((hourlyWeather) => (
-                  <HourlyWeatherItem
-                    key={hourlyWeather.time_epoch}
-                    hourlyWeather={hourlyWeather}
-                  />
-                ))}
-              </ul>
+      {/* === Contenu météo === */}
+      <div className={styles.weatherRoot} style={{ flex: 1 }}>
+        <div className={styles.container}>
+          {/* Search section */}
+          <SearchSection
+            getWeatherDetails={getWeatherDetails}
+            searchInputRef={searchInputRef}
+          />
+
+          {/* Content */}
+          {hasNoResults ? (
+            <NoResultsDiv />
+          ) : (
+            <div className={styles["weather-section"]}>
+              <CurrentWeather currentWeather={currentWeather} />
+              <div className={styles["hourly-forecast"]}>
+                <ul className={styles["weather-list"]}>
+                  {hourlyForecasts.map((hourlyWeather) => (
+                    <HourlyWeatherItem
+                      key={hourlyWeather.time_epoch}
+                      hourlyWeather={hourlyWeather}
+                    />
+                  ))}
+                </ul>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
