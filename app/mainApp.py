@@ -26,15 +26,38 @@ from kivy.uix.widget import Widget
 from kivy.graphics import Color, RoundedRectangle
 
 
-# Lightweight utils
+# Voice (if you use it in your orchestrator)
+from vosk import Model, KaldiRecognizer  # noqa
+import pyaudio  # noqa
 import paho.mqtt.client as mqtt
+
+# Pantallas // Ecrans
+from weather.weatherScreen import WeatherScreenWidget
 from weather.weather_data import fetch_weather_bundle
 from tts_service import tts_service
+from events.eventsScreen import EventsScreen
+from events.dayEventsScreen import DayEventsScreen
 from events.morningEventSummary import schedule_morning_summary
+#from videocall.videocallScreen import VideoCallScreen
+from board.boardScreen import BoardScreen
 from mqtt_publisher import WEATHER_CITIES_GEO
-from videocall.contactScreen import list_contact_path
+from videocall.confirmation_popup import show_call_sent_popup
+from videocall.contactScreen import ContactScreen, list_contact_path
+from settings.settingsScreen import SettingsScreen
+from settings.weatherChoice import WeatherChoice
 from app_config import AppConfig
+from settings.languageScreen import LanguageScreen
+from settings.buttonColorsScreen import ButtonColorsScreen
+from settings.notificationsScreen import NotificationsScreen
+from settings.logsScreen import LogsMenuScreen, LogsViewerScreen
+from settings.launcherConfigScreen import LauncherConfigScreen
+from settings.rfidActionsScreen import RFIDActionsScreen
+from settings.jokeCategoryScreen import JokeCategoryScreen
+from settings.restartScreen import RestartOnlyScreen
+from settings.audioScreen import AudioScreen
 from audio.audio_devices import apply_system_audio_devices
+from jokes.jokesScreen import JokesScreen
+from settings.pinCodeScreen import PinCodeScreen, PinDisplay, PinButton, PINBACK_BUTTON_KV
 from device_heartbeat_service import send_device_heartbeat_async
 from device_log_sync_service import schedule_device_log_sync
 from popup_style import wrap_popup_content, popup_theme_kwargs
@@ -46,24 +69,28 @@ from icso_data.videocall_logger import log_call_request
 from icso_data.wakeup_logger import log_wakeup
 from icso_data.sync_service import schedule_icso_sync
 
-# Virtual assistant action executor
+# Virtual assistant
 from virtual_assistant.actions import ActionExecutor
+from virtual_assistant.recognizer import SpeechRecognizer
+from virtual_assistant.main_assistant import AssistantOrchestrator
 
 # Sleep screen
 from black_overlay import BlackOverlay
 
-# HTTP & threading
+# HTTP
 import requests
 from requests import HTTPError
 import threading
 
-# Translation
+# ✅ ÉTAPE 7 : Translation
 from translation import _, change_language, get_current_language
 
 # Notifications
 from notifications.notification_manager import NotificationManager
 from contact_sync_service import sync_contacts_for_device
 from virtual_assistant.commands import refresh_contact_keywords
+
+Builder.load_string(PINBACK_BUTTON_KV)
 
 RUNTIME_STATE_DIR = os.getenv("COBIEN_RUNTIME_STATE_DIR") or os.path.join(os.path.dirname(__file__), "runtime_state")
 UPDATE_MARKER_FILE = os.path.join(RUNTIME_STATE_DIR, "system_updated.json")
@@ -1915,7 +1942,6 @@ class MainScreen(Screen):
         # Create assistant exactly once, protected against concurrent calls.
         with self._assistant_init_lock:
             if not hasattr(app, "assistant") or app.assistant is None:
-                from virtual_assistant.main_assistant import AssistantOrchestrator
                 app.assistant = AssistantOrchestrator(self)
 
         # ✅ Garder un alias local si tu en as besoin
@@ -2251,14 +2277,15 @@ class MyApp(App):
             print("[APP] Singleton lock missing at startup. Stopping duplicate instance.")
             self.stop()
             return
-        
+        self._start_orchestrator()
+        self._start_proximity_logger()
         if getattr(self, "main_ref", None):
             self.main_ref._start_backend_polling()
-            
+        schedule_icso_sync(force_snapshot=True)
+        self._schedule_device_heartbeat()
+        self._send_device_heartbeat()
         Clock.schedule_once(lambda dt: self._show_pending_system_update_notification(), 1.0)
-        
-        # Lanzar la carga diferida de pantallas pesadas e inicialización del entorno
-        Clock.schedule_once(self._load_secondary_screens, 0.2)
+        schedule_morning_summary()
 
     def on_stop(self):
         self._stop_orchestrator()
@@ -2718,40 +2745,10 @@ class MyApp(App):
         main.add_widget(main_screen_widget)
         sm.add_widget(main)
         
-        # La carga del resto de pantallas se hará de forma diferida en _load_secondary_screens
-
-        self.main_ref = main_screen_widget
-        sm.current = 'main'
-        return sm
-
-    def _load_secondary_screens(self, dt):
-        print("[APP] Lazy loading secondary screens...")
-        
-        # Imports pesados diferidos
-        from weather.weatherScreen import WeatherScreenWidget
-        from events.eventsScreen import EventsScreen
-        from events.dayEventsScreen import DayEventsScreen
-        from board.boardScreen import BoardScreen
-        from videocall.contactScreen import ContactScreen
-        from settings.settingsScreen import SettingsScreen
-        from settings.weatherChoice import WeatherChoice
-        from settings.languageScreen import LanguageScreen
-        from settings.buttonColorsScreen import ButtonColorsScreen
-        from settings.notificationsScreen import NotificationsScreen
-        from settings.logsScreen import LogsMenuScreen, LogsViewerScreen
-        from settings.launcherConfigScreen import LauncherConfigScreen
-        from settings.rfidActionsScreen import RFIDActionsScreen
-        from settings.jokeCategoryScreen import JokeCategoryScreen
-        from settings.restartScreen import RestartOnlyScreen
-        from settings.audioScreen import AudioScreen
-        from jokes.jokesScreen import JokesScreen
-        from settings.pinCodeScreen import PinCodeScreen, PINBACK_BUTTON_KV
-        
-        Builder.load_string(PINBACK_BUTTON_KV)
-        sm = self.root
-        
+        # Autres écrans
         weather_screen_widget = WeatherScreenWidget(sm)
-        weather_screen_widget.main_ref = self.main_ref
+        # ajout pour faire le lien avec weatherScreen et faire fonctionner la méthode speak de main_assistant
+        weather_screen_widget.main_ref = main_screen_widget
         weather_screen_widget.set_city_list(WEATHER_CITIES_GEO)
         weather = Screen(name='weather')
         weather.add_widget(weather_screen_widget)
@@ -2769,60 +2766,64 @@ class MyApp(App):
         sm.add_widget(board)
         
         contacts_screen = ContactScreen(sm, contacts_file=list_contact_path)
-        contacts_screen.name = 'contacts'
+        contacts_screen.name = 'contacts'  # Important !
         sm.add_widget(contacts_screen)
         
         settings = Screen(name='settings')
         settings.add_widget(SettingsScreen(sm, self.cfg))
         sm.add_widget(settings)
         
+        # Écran langue
         sm.add_widget(Screen(name='settings_language'))
         sm.get_screen('settings_language').add_widget(LanguageScreen(sm, self.cfg))
         
+        # Écran couleurs boutons
         sm.add_widget(Screen(name='button_colors'))
         sm.get_screen('button_colors').add_widget(ButtonColorsScreen(sm, self.cfg))
         
         sm.add_widget(Screen(name='settings_notifications'))
         sm.get_screen('settings_notifications').add_widget(NotificationsScreen(sm, self.cfg))
-        
         logs_menu = LogsMenuScreen(sm, self.cfg, name='settings_logs_menu')
         sm.add_widget(logs_menu)
-        
         logs_can = LogsViewerScreen(sm, self.cfg, log_prefix="can-bus", title_text="Log CAN Bus", name='settings_logs_can')
         sm.add_widget(logs_can)
-        
-        logs_bridge = LogsViewerScreen(sm, self.cfg, log_prefix="mqtt-can-bridge", title_text="Log MQTT-CAN Bridge", name='settings_logs_bridge')
+        logs_bridge = LogsViewerScreen(
+            sm, self.cfg, log_prefix="mqtt-can-bridge", title_text="Log MQTT-CAN Bridge", name='settings_logs_bridge'
+        )
         sm.add_widget(logs_bridge)
-        
-        logs_app = LogsViewerScreen(sm, self.cfg, log_prefix="cobien-app", title_text="Log Aplicación", name='settings_logs_app')
+        logs_app = LogsViewerScreen(
+            sm, self.cfg, log_prefix="cobien-app", title_text="Log Aplicación", name='settings_logs_app'
+        )
         sm.add_widget(logs_app)
-        
-        logs_icso = LogsViewerScreen(sm, self.cfg, log_prefix="icso", title_text="Log ICSO", explicit_files=["icso_log.txt", "icso_log.json", "icso_proximity_sensors.txt"], name='settings_logs_icso')
+        logs_icso = LogsViewerScreen(
+            sm,
+            self.cfg,
+            log_prefix="icso",
+            title_text="Log ICSO",
+            explicit_files=["icso_log.txt", "icso_log.json", "icso_proximity_sensors.txt"],
+            name='settings_logs_icso',
+        )
         sm.add_widget(logs_icso)
-        
         launcher_settings_screen = LauncherConfigScreen(sm, self.cfg, name='settings_launcher')
         sm.add_widget(launcher_settings_screen)
-        
         sm.add_widget(Screen(name='joke_category'))
         sm.get_screen('joke_category').add_widget(JokeCategoryScreen(sm, self.cfg))
-        
         sm.add_widget(Screen(name='jokes'))
         sm.get_screen('jokes').add_widget(JokesScreen(sm))
         
         sm.add_widget(Screen(name='settings_rfid'))
         sm.get_screen('settings_rfid').add_widget(RFIDActionsScreen(sm, self.cfg))
-        
+
         sm.add_widget(Screen(name='settings_audio'))
         sm.get_screen('settings_audio').add_widget(AudioScreen(sm, self.cfg))
-        
+
         weather_choice_screen = WeatherChoice(sm, self.cfg)
         weather_choice = Screen(name='weather_choice')
         weather_choice.add_widget(weather_choice_screen)
         sm.add_widget(weather_choice)
-        
+
         pin_screen = PinCodeScreen(sm=sm, cfg=self.cfg, target_screen="settings", name="pin_code")
         sm.add_widget(pin_screen)
-        
         reboot_pin_screen = PinCodeScreen(
             sm=sm,
             cfg=self.cfg,
@@ -2834,17 +2835,12 @@ class MyApp(App):
         )
         sm.add_widget(reboot_pin_screen)
         sm.add_widget(RestartOnlyScreen(sm, self.cfg, name='restart_only'))
-        
-        # Start delayed services that depend on everything being loaded
-        self._start_orchestrator()
-        self._start_proximity_logger()
-        schedule_icso_sync(force_snapshot=True)
-        self._schedule_device_heartbeat()
-        self._send_device_heartbeat()
-        schedule_morning_summary()
-        
-        print("[APP] Secondary screens loaded successfully.")
+
+        self.main_ref = main_screen_widget
+        sm.current = 'main'
+        return sm
     
+
     def reload_main_screen(self):
         """Recharge l'écran principal avec les nouvelles traductions"""
         try:
