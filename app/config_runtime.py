@@ -41,9 +41,6 @@ DEPLOYMENT_ENV_RUNTIME_FILE = "deploy/ubuntu/cobien-update.env"
 # should not be overwritten on each restart/update.
 PRESERVED_LOCAL_CONFIG_KEYS: Dict[str, list[str]] = {
     "settings": [
-        "weather_cities",
-        "weather_city_catalog",
-        "weather_primary_city",
         "button_colors",
         "rfid_actions",
         "microphone_device",
